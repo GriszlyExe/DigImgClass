@@ -138,7 +138,7 @@ def detect(save_img=False):
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
 
             #Save Hand img
-            output_path = f'/root/chess/yolov7/NoHand/img{asd}.jpg'
+            output_path = f'NoHand/img{asd}.jpg'
             if ccccc == 0:
                 asd = asd+1
                 cv2.imwrite(output_path, im_c)
