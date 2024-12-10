@@ -67,6 +67,11 @@ def detect(save_img=False):
     old_img_b = 1
 
     t0 = time.time()
+    prev = 0
+    asd = 1
+    ccccc = 0
+    delay = 0
+    tick = -1
     for path, img, im0s, vid_cap in dataset:
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
@@ -104,17 +109,21 @@ def detect(save_img=False):
                 p, s, im0, frame = path, '', im0s, getattr(dataset, 'frame', 0)
 
             p = Path(p)  # to Path
+            k = list()
             save_path = str(save_dir / p.name)  # img.jpg
             txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # img.txt
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+
+            im_c = im0.copy()
             if len(det):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
-
+                
                 # Print results
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
+                    k.append(names[int(c)])
 
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
@@ -128,6 +137,32 @@ def detect(save_img=False):
                         label = f'{names[int(cls)]} {conf:.2f}'
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
 
+            #Save Hand img
+            output_path = f'/root/chess/yolov7/NoHand/img{asd}.jpg'
+            if ccccc == 0:
+                asd = asd+1
+                cv2.imwrite(output_path, im_c)
+                print(f"Image saved at {output_path}")
+
+            if k.count('person'):
+                delay+=1
+                if prev == 0 and delay > 30:
+                    # asd = asd+1
+                    prev = 1
+                    # cv2.imwrite(output_path, im0)
+                    # print(f"Image saved at {output_path}")
+            else:
+                if prev == 1:
+                    tick = 120
+                    prev = 0
+                delay = 0
+
+            if tick == 0:
+                asd = asd+1
+                cv2.imwrite(output_path, im_c)
+                print(f"Image saved at {output_path}")
+            tick-=1
+            ccccc+=1
             # Print time (inference + NMS)
             print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
 
